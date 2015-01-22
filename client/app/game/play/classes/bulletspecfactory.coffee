@@ -10,9 +10,9 @@ class @BulletSpecFactory
     delay_in_volleys: 0,
     # bullet and damage
     bullet_image: 'bullet',
-    bullet_scale: 0.4,
-    collisionRadiusPx: 20,
-    craterRadiusPx: 50,
+    bullet_scale: 0.3,
+    collisionRadiusPx: 16,
+    craterRadiusPx: 30,
     # Damage and explosion damage.  If a direct hit is achieved, the hit player
     # gets directHitDamage applied, but is ignored in the explosion damage.
     # All others hit by indirect explosionRadius will incur linearly decreasing
@@ -21,22 +21,27 @@ class @BulletSpecFactory
     # note that explosion radius is based on center of bullet to center of
     # player, so need to add at least player sprite width/2 to account for
     # that extra distance
-    explosionRadius: 70,
+    explosionRadius: 60,
     explosionMaxDamage: 30,
     explosionMinDamage: 10,
     # explosion emitters, calls explosion factory methods to generate explosions
     # at the start of bullet's life, and at the end
     # can also attach emitters for smoke trail effect
     particleStart: (game, x, y) -> 
-      em = ExplosionFactory.createGlowBasic(game, x, y, 0.7, 0.3)
-      return em.concat(ExplosionFactory.createSparksBasic(game, x, y, 0.8))
+      em = ExplosionFactory.createGlowBasic(game, x, y, 0.5, 0.3)
+      return em.concat(ExplosionFactory.createSparksBasic(game, x, y, 0.5))
     particleAttach: null,
     particleEnd: (game, x, y, hitground=false) -> 
       if hitground
-        em = ExplosionFactory.createPebbleBasic(game, x, y, 1)
+        em = ExplosionFactory.createPebbleBasic(game, x, y, 0.6)
       else
-        em = ExplosionFactory.createFlareBasic(game, x, y, 1)
-      return em.concat(ExplosionFactory.createExplosionBasic(game, x, y, 1))
+        em = ExplosionFactory.createFlareBasic(game, x, y, 0.6)
+      return em.concat(ExplosionFactory.createExplosionBasic(game, x, y, 0.6))
+    # These are special bullet types, e.g., teleportation
+    isTeleport: false,
+    teleportEnd: (player, x, y) ->
+      player.setX(x)
+      player.setY(y)
   }
 
   @allSpecs = {
@@ -49,11 +54,11 @@ class @BulletSpecFactory
       bullets_per_volley: 1,    # total shots: 1
       # bullet and damage
       bullet_image: 'bullet',
-      bullet_scale: 0.4,
-      collisionRadiusPx: 20,
-      craterRadiusPx: 50,
+      bullet_scale: 0.3,
+      collisionRadiusPx: 16,
+      craterRadiusPx: 30,
       directHitDamage: 33,      # max:    33
-      explosionRadius: 80,
+      explosionRadius: 60,
       explosionMaxDamage: 30,   # splash: 30 - 10
       explosionMinDamage: 10
     },
@@ -68,9 +73,9 @@ class @BulletSpecFactory
       delay_in_volleys: 0.25,
       # bullet and damage
       bullet_image: 'missile1',
-      bullet_scale: 0.4,
-      collisionRadiusPx: 20,
-      craterRadiusPx: 36,
+      bullet_scale: 0.3,
+      collisionRadiusPx: 16,
+      craterRadiusPx: 28,
       directHitDamage: 13,      # max: 52
       explosionRadius: 60,
       explosionMaxDamage: 8,   # splash: 32 - 24
@@ -82,10 +87,35 @@ class @BulletSpecFactory
         return ExplosionFactory.createSmokeTrailBasic(game, x, y, 0.6)
       particleEnd: (game, x, y, hitground=false) ->
         if hitground
-          em = ExplosionFactory.createPebbleBasic(game, x, y, 0.7)
+          em = ExplosionFactory.createPebbleBasic(game, x, y, 0.6)
         else
-          em = ExplosionFactory.createFlareBasic(game, x, y, 0.7)
-        return em.concat(ExplosionFactory.createExplosionBasic(game, x, y, 0.7))
+          em = ExplosionFactory.createFlareBasic(game, x, y, 0.6)
+        return em.concat(ExplosionFactory.createExplosionBasic(game, x, y, 0.5))
+    },
+    # TELEPORTATION
+    "2": {
+      bullet_image: 'tbullet',
+      bullet_scale: 0.4,
+      collisionRadiusPx: 16,
+      craterRadiusPx: 0,
+      directHitDamage: 0,
+      explosionRadius: 0,
+      explosionMaxDamage: 0,
+      explosionMinDamage: 0,
+      particleStart: (game, x, y) -> 
+        em = ExplosionFactory.createFlareBasic(game, x, y, 0.4)
+        return em.concat(ExplosionFactory.createSparksBasic(game, x, y, 0.6, 'spark_blue'))
+      particleAttach: (game, x, y) ->
+        return ExplosionFactory.createSmokeTrailBasic(game, x, y, 1.0, 2.0, 'spark_blue', true)
+      particleEnd: (game, x, y, hitground=false) -> 
+        if hitground
+          em = ExplosionFactory.createPebbleBasic(game, x, y, 1)
+        else
+          em = ExplosionFactory.createFlareBasic(game, x, y, 1)
+        return em.concat(ExplosionFactory.createExplosionBasic(game, x, y, 1))
+      # These are special bullet types, e.g., teleportation
+      isTeleport: true,
+      particleEnd: null
     }
   }
 
@@ -119,7 +149,9 @@ class @BulletSpecFactory
             explosionMinDamage: wep.explosionMinDamage,
             particleStart: wep.particleStart,
             particleAttach: wep.particleAttach,
-            particleEnd: wep.particleEnd
+            particleEnd: wep.particleEnd,
+            isTeleport: wep.isTeleport,
+            teleportEnd: wep.teleportEnd
           }
         })
 

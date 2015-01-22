@@ -134,9 +134,9 @@ class @SessionHost
         GameUI.updateTurnTime(0)
         # If time ran out but there is a bullet still alive, let the bullet
         # end the player's turn upon its death
-        if @active_player != null
-          if !@active_player.hasAliveBullets()
-            @active_player.endTurn()
+        #if @active_player != null
+        #  if !@active_player.hasAliveBullets()
+        #    @active_player.endTurn()
 
     if @endingTurn
       @endTurnTimer -= dt
@@ -150,6 +150,11 @@ class @SessionHost
 
     GameInputs.update(dt)
 
+    GameUI.updateMoveBar(
+      @active_player.cur_move_points / @active_player.max_move_points)
+    GameUI.updateShotBar(
+      @active_player.cur_shot_points / @active_player.max_shot_points)
+
   testExplosion: () ->
     x = @game.input.activePointer.worldX
     y = @game.input.activePointer.worldY
@@ -161,23 +166,29 @@ class @SessionHost
     @world.render()
 
   playerMoveLeft: (dt) ->
+    @gcamera.follow(@active_player.sprite)
     @active_player.moveLeft(dt, @world)
-    GameUI.updateMoveBar(
-      1.0 - @active_player.cur_movement / @active_player.max_movement)
   playerMoveRight: (dt) ->
+    @gcamera.follow(@active_player.sprite)
     @active_player.moveRight(dt, @world)
-    GameUI.updateMoveBar(
-      1.0 - @active_player.cur_movement / @active_player.max_movement)
   playerAimUp: (dt) ->
+    @gcamera.follow(@active_player.sprite)
     @active_player.aimUp(dt)
   playerAimDown: (dt) ->
+    @gcamera.follow(@active_player.sprite)
     @active_player.aimDown(dt)
   playerChargeShot: (dt) ->
+    @gcamera.follow(@active_player.sprite)
     @active_player.chargeShot(dt)
-    GameUI.updateShotBar(
-      @active_player.shot_charge / @active_player.max_shot_charge)
+    GameUI.updateChargeBar(
+      @active_player.cur_charge / @active_player.max_charge)
   playerFire: () ->
+    @gcamera.follow(@active_player.sprite)
     @active_player.fire()
+    GameUI.updateChargeBar(0)
+    GameUI.refreshChargeSave(@active_player.last_charge / @active_player.max_charge)
+    GameInputs.spaceIsDown = false
+    GameUI.refreshWeaponUI(@active_player.wep_num)
   playerMoveCamera: (x, y) ->
     @gcamera.playerMoveCamera(x, y)
   playerReleaseCamera: () ->
@@ -242,8 +253,8 @@ class @SessionHost
   endTurnRefreshUI: ->
     GameUI.updateMoveBar(
       1.0 - @active_player.cur_movement / @active_player.max_movement)
-    GameUI.updateShotBar(0)
-    GameUI.refreshShotSave(@active_player.last_charge / @active_player.max_shot_charge)
+    GameUI.updateChargeBar(0)
+    GameUI.refreshChargeSave(@active_player.last_charge / @active_player.max_shot_charge)
     GameInputs.spaceIsDown = false
     GameUI.refreshWeaponUI(@active_player.wep_num)
 

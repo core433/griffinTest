@@ -25,9 +25,11 @@ class @PreloaderState extends Phaser.State
 
     # explosives and stuff
     @game.load.image("bullet", @getAssetPath("bullet.png"))
+    @game.load.image("tbullet", @getAssetPath("teleport_bullet.png"))
     @game.load.image("missile1", @getAssetPath("missile1.png"))
     @game.load.image("explosion", @getAssetPath("explosion.png"))
     @game.load.image("spark", @getAssetPath("spark.png"))
+    @game.load.image("spark_blue", @getAssetPath("spark_blue.png"))
     @game.load.image("glow", @getAssetPath("glow.png"))
     @game.load.image("ring", @getAssetPath("ring.png"))
     @game.load.image("flare", @getAssetPath("flare.png"))
@@ -50,6 +52,8 @@ class @PreloaderState extends Phaser.State
     @game.load.spritesheet("buttonchoose", 
         @getAssetPath("buttonchoose_sheet.png"),
         119, 119)
+
+    @game.time.advancedTiming = true
 
 	create: ->
     @startMainMenu()

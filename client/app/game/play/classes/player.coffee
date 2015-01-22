@@ -19,18 +19,29 @@ class @Player
     @healthsprite = null
     @healthbarsprite = null
     @aimspeed = 70
-    @speed = 70
+    @speed = 25
+    @max_move_points = 200 # total number of move points
+    @cur_move_points = 200 # current number of move ments
+    @move_recharge_rate = 20    # how many move points recharges per second
+    @move_deplete_rate = 30     # how many move points depleted per second
+    @teleport_deplete_rate = 100
+
     @max_movement = 200
-    @cur_movement = 0
     @facingLeft = true
 
     # firing and charging shot
     @wep_num = 0
     @reticule = null
     @can_fire = false
-    @shot_charge_rate = 500
-    @shot_charge = 0
-    @max_shot_charge = 1500
+
+    @max_shot_points = 200
+    @cur_shot_points = 200
+    @shot_recharge_rate = 20
+    @shot_deplete_rate = 80
+
+    @charge_rate = 440
+    @cur_charge = 0
+    @max_charge = 1100
     @last_charge = 0        # used to show last shot strength indicator
 
     # Specifies a dictionary of delay times and bullets to create with their
@@ -59,9 +70,9 @@ class @Player
     @reticule = new Reticule(this)
     # XXX should resolve these from the mount type's cannon location, which
     # should be a % of the sprite's width and height
-    cannonXOff = 50*@scale
-    cannonYOff = -40*@scale
-    @reticule.initialize(cannonXOff, cannonYOff, 40, 0, 1)
+    cannonXOff = 40*@scale
+    cannonYOff = -30*@scale
+    @reticule.initialize(cannonXOff, cannonYOff, 40, 0, 0.6)
     @reticule.setMaxAim(70)
     @reticule.setMinAim(10)
 
@@ -148,6 +159,7 @@ class @Player
   # ============================================================================
   setWeapon: (num) ->
     @wep_num = num
+    @cur_charge = 0
 
   aimUp: (dt) ->
     aimChange = @aimspeed * dt
@@ -160,10 +172,29 @@ class @Player
     @reticule.update(@sprite.x, @sprite.y)
 
   chargeShot: (dt) ->
-    @last_charge = @shot_charge
-    addCharge = @shot_charge_rate * dt
-    @shot_charge += addCharge
-    @shot_charge = GameMath.clamp(@shot_charge, 1, @max_shot_charge)
+
+    movement = false
+
+    # weapon #2 is teleport for now
+    if @wep_num == 2
+      movement = true
+
+    if movement
+      shot_cost = @teleport_deplete_rate * dt
+      if shot_cost > @cur_move_points
+        shot_cost = @cur_move_points
+      @cur_move_points -= shot_cost
+      addCharge = @charge_rate * shot_cost / @teleport_deplete_rate
+    else
+      shot_cost = @shot_deplete_rate * dt
+      if shot_cost > @cur_shot_points
+        shot_cost = @cur_shot_points
+      @cur_shot_points -= shot_cost
+      addCharge = @charge_rate * shot_cost / @shot_deplete_rate
+
+    @last_charge = @cur_charge
+    @cur_charge += addCharge
+    @cur_charge = GameMath.clamp(@cur_charge, 1, @max_charge)
 
   spawnBullet: (spec) ->
 
@@ -179,7 +210,7 @@ class @Player
     # XXX affected by wind, etc
     fx = 0
     fy = 9000 # bullet gravity
-    # since we've zeroed @shot_charge when calling fire(), 
+    # since we've zeroed @cur_charge when calling fire(), 
     # use stored @last_charge instead
     vel = @last_charge
     bullet.initialize(
@@ -190,7 +221,7 @@ class @Player
       spec)
     
     @shost.bullets.push(bullet)
-    @shost.gcamera.follow(bullet.sprite)
+    #@shost.gcamera.follow(bullet.sprite)
 
   updateBullets: (dt) ->
     if @bulletQueue.length <= 0
@@ -207,8 +238,17 @@ class @Player
         newQueue.push(newSpec)
     @bulletQueue = newQueue
 
-  update: (dt, world) ->
+  recharge: (dt) ->
+    @cur_move_points += @move_recharge_rate * dt
+    if @cur_move_points > @max_move_points
+      @cur_move_points = @max_move_points
+    @cur_shot_points += @shot_recharge_rate * dt
+    if @cur_shot_points > @max_shot_points
+      @cur_shot_points = @max_shot_points
 
+  update: (dt, world) ->
+    @recharge(dt)
+    
     moved = @entity.update()
 
     @checkWorldCollision(world)
@@ -246,40 +286,9 @@ class @Player
     @liveBulletsThisRound = @bulletQueue.length
     # It is up to update() to update the bulletQueue and spawn bullets
 
-    @can_fire = false
-    @last_charge = @shot_charge
-    @shot_charge = 0
-
-  """
-  fire: () ->
-    if !@can_fire
-      return
-    #console.log 'FIRE AWAY!'
-
-    bullet = new Bullet(@shost)
-    rorg = @reticule.getOrigin()
-
-    dirSign = 1
-    angle = @reticule.aimAngle
-    if @facingLeft
-      dirSign = -1
-      angle = 180 - @reticule.aimAngle
-
-    # XXX affected by wind, etc
-    fx = 0
-    fy = 9000 # bullet gravity
-    bullet.collisionRadiusPx = 20
-    bullet.explosionRadiusPx = 60
-    vel = @shot_charge
-    bullet.initialize(this, @getX() + dirSign *rorg[0], @getY() + rorg[1], vel, angle, fx, fy, 0.4, 0)
-    
-    @shost.bullets.push(bullet)
-    @shost.gcamera.follow(bullet.sprite)
-
-    @can_fire = false
-    @last_charge = @shot_charge
-    @shot_charge = 0
-  """
+    #@can_fire = false
+    @last_charge = @cur_charge
+    @cur_charge = 0
 
   # ============================================================================
   #                           MOVEMENT AND FALLING
@@ -336,9 +345,8 @@ class @Player
       return
     console.log @getX()
     console.log @getY()
-    @cur_movement = 0
     @can_fire = true
-    @shot_charge = 0
+    @cur_charge = 0
 
   hasAliveBullets: () ->
     if @liveBulletsThisRound > 0
@@ -367,13 +375,9 @@ class @Player
     @can_fire = false
 
   moveLeft: (dt, world) ->
-    if !@can_fire
-      return
     @move(dt, world, true)
 
   moveRight: (dt, world) ->
-    if !@can_fire
-      return
     @move(dt, world, false)
 
   move: (dt, world, isLeft=false) ->
@@ -390,15 +394,18 @@ class @Player
 
     # First check that the player still has remaning "movement points"
     # in his turn.  If not, don't allow moving.
-    allowable_dist = @max_movement - @cur_movement
-    if allowable_dist <= 0
+    if @cur_move_points <= 0
       return
 
     # If this move will exhaust remaining "movement points", cap it to remaining
     # movement
-    try_dist = @speed * dt
-    if try_dist > allowable_dist
-      try_dist = allowable_dist
+    spend_move_points = @move_deplete_rate * dt
+    if spend_move_points > @cur_move_points
+      spend_move_points = @cur_move_points
+
+    try_dist = spend_move_points / @move_deplete_rate * @speed
+    if try_dist <= 0
+      return
 
     # =======================================================
     # First try our side checks.
@@ -454,9 +461,8 @@ class @Player
       else
         actual_dist = 0
 
-    @cur_movement += actual_dist
-    # XXX implement this:
-    #@cur_movement += actual_walked_dist
+    if actual_dist != 0
+      @cur_move_points -= spend_move_points
     @setX(@getX() + actual_dist * dirSign)
     @reticule.update(@sprite.x, @sprite.y)
     @nametext.x = @sprite.x + @nameoffX

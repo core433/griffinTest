@@ -57,6 +57,7 @@ class @Entity
 
   setX: (newX) ->
     @p2body.position[0] = newX
+    @p2body.velocity[0] = 0
     @x = newX
 
   getX: ->
@@ -64,6 +65,7 @@ class @Entity
 
   setY: (newY) ->
     @p2body.position[1] = newY
+    @p2body.velocity[0] = 0
     @y = newY
 
   getY: ->

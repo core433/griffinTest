@@ -34,6 +34,9 @@ class @Bullet
     @attachedEmitters = []
     @particleEnd = null
 
+    @isTeleport = false
+    @teleportEnd = null
+
     @entity = null
 
     @distance_traveled = 0
@@ -82,6 +85,11 @@ class @Bullet
     @particleStart = spec.particleStart
     @particleAttach = spec.particleAttach
     @particleEnd = spec.particleEnd
+    # teleportation
+    @isTeleport = spec.isTeleport
+    @teleportEnd = spec.teleportEnd
+    if @isTeleport
+      @sprite.blendMode = Phaser.blendModes.ADD
 
   update: (world) ->
 
@@ -114,11 +122,14 @@ class @Bullet
     doKillBullet = false
     spawnExplosion = false
     explosionIgnorePlayer = null
+    doTeleport = false
     damage = 0
 
     # ========================================
     # Player collisions
     for player in @shost.players
+      if @isTeleport
+        continue
       if @entity.collidesWithEntity(player.entity)
         # if hit firer and not yet past self damage distance traveled, continue
         if player == @player && !@canHitFirer
@@ -147,7 +158,10 @@ class @Bullet
       world.createCrater(tileX, tileY, @craterRadiusPx / world.tileSize)
       doKillBullet = true
       spawnExplosion = true
-      @shost.gcamera.jolt()
+      if @isTeleport
+        doTeleport = true
+      else
+        @shost.gcamera.jolt()
 
     # ========================================
     # Spawn explosion, if necessary, which damages players linearly from
@@ -175,12 +189,15 @@ class @Bullet
       else if @entity.x < @shost.world.gameXBoundL || @entity.x > @shost.world.gameXBoundR
         doKillBullet = true
 
+    if doTeleport
+      @teleportEnd(@player, @entity.x, @entity.y)
+
     if doKillBullet
       if GameConstants.debug
         console.log 'bullet died'
       @shost.removeBullet(this)
       @kill()
-      @player.tryBulletEndTurn()
+      #@player.tryBulletEndTurn()
 
   kill: () ->
     @sprite.destroy(true)
@@ -195,7 +212,8 @@ class @Bullet
     @attachedEmitters = null
 
   drawExplosion: (x, y, hitGround) ->
-    @particleEnd(@shost.game, x, y, hitGround)
+    if @particleEnd != null
+      @particleEnd(@shost.game, x, y, hitGround)
 
 
 
