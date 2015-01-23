@@ -1,5 +1,6 @@
 class @WorldCreator
   @spawnColor = 'rgba(255,51,255,1)'  # Corresponds to #ff33ff
+  @spawnColorAlt = 'rgba(253,66,252,1)'
 
   @rgbaFormat: (r,g,b,a) ->
     return 'rgba('+r+','+g+','+b+','+a/255.0+')'
@@ -51,7 +52,7 @@ class @WorldCreator
         alpha = pixelData[((img.width * y) + x) * 4 + 3]
         rgba = @rgbaFormat(red, green, blue, alpha)
         # If the point is a spawn point, store it
-        if rgba == @spawnColor
+        if rgba == @spawnColor or rgba == @spawnColorAlt
           world.addSpawnPoint(x, y)
           world.data[x][y] = world.futureData[x][y] = 'rgba(0,0,0,0)'
         else
