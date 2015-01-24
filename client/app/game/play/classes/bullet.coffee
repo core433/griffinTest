@@ -191,6 +191,7 @@ class @Bullet
 
     if doTeleport
       @teleportEnd(@player, @entity.x, @entity.y)
+      @shost.gcamera.center(@player.sprite)
 
     if doKillBullet
       if GameConstants.debug

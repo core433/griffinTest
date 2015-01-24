@@ -42,13 +42,14 @@ class @SessionHost
     # Setup background and world
     @playgroup = @game.add.group()
     @background = new Phaser.Sprite(@game, 0, 0, 'background')
+    @background.body = null
     @playgroup.add(@background)
     @game.camera.scale.set(
       GameConstants.cameraScale,GameConstants.cameraScale)
 
     # This is our own game logic World class, not to be confused with
     # Phaser's built in @game.world
-    @world = WorldCreator.loadFromImage(this, 'world_bridge')
+    @world = WorldCreator.loadFromImage(this, 'world_divide')
     @world.setSpawnOrder([2,0,1,3])
     console.log @world.spawnOrder
     # world will set bounds of the game, from that need to set background
@@ -172,18 +173,18 @@ class @SessionHost
     @gcamera.follow(@active_player.sprite)
     @active_player.moveRight(dt, @world)
   playerAimUp: (dt) ->
-    @gcamera.follow(@active_player.sprite)
+    #@gcamera.follow(@active_player.sprite)
     @active_player.aimUp(dt)
   playerAimDown: (dt) ->
-    @gcamera.follow(@active_player.sprite)
+    #@gcamera.follow(@active_player.sprite)
     @active_player.aimDown(dt)
   playerChargeShot: (dt) ->
-    @gcamera.follow(@active_player.sprite)
+    #@gcamera.follow(@active_player.sprite)
     @active_player.chargeShot(dt)
     GameUI.updateChargeBar(
       @active_player.cur_charge / @active_player.max_charge)
   playerFire: () ->
-    @gcamera.follow(@active_player.sprite)
+    #@gcamera.follow(@active_player.sprite)
     @active_player.fire()
     GameUI.updateChargeBar(0)
     GameUI.refreshChargeSave(@active_player.last_charge / @active_player.max_charge)

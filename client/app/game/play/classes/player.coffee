@@ -22,9 +22,9 @@ class @Player
     @speed = 25
     @max_move_points = 200 # total number of move points
     @cur_move_points = 200 # current number of move ments
-    @move_recharge_rate = 20    # how many move points recharges per second
-    @move_deplete_rate = 30     # how many move points depleted per second
-    @teleport_deplete_rate = 100
+    @move_recharge_rate = 10    # how many move points recharges per second
+    @move_deplete_rate = 14     # how many move points depleted per second
+    @teleport_deplete_rate = 80
 
     @max_movement = 200
     @facingLeft = true
@@ -36,10 +36,10 @@ class @Player
 
     @max_shot_points = 200
     @cur_shot_points = 200
-    @shot_recharge_rate = 20
-    @shot_deplete_rate = 80
+    @shot_recharge_rate = 12
+    @shot_deplete_rate = 100
 
-    @charge_rate = 440
+    @charge_rate = 420
     @cur_charge = 0
     @max_charge = 1100
     @last_charge = 0        # used to show last shot strength indicator
@@ -55,6 +55,7 @@ class @Player
     @sprite.angle = rot
     @sprite.scale.x = @scale
     @sprite.scale.y = @scale
+    @sprite.body = null
     @shost.playgroup.add(@sprite)
 
     # Create physics entity
@@ -70,8 +71,8 @@ class @Player
     @reticule = new Reticule(this)
     # XXX should resolve these from the mount type's cannon location, which
     # should be a % of the sprite's width and height
-    cannonXOff = 40*@scale
-    cannonYOff = -30*@scale
+    cannonXOff = 50*@scale
+    cannonYOff = -40*@scale
     @reticule.initialize(cannonXOff, cannonYOff, 40, 0, 0.6)
     @reticule.setMaxAim(70)
     @reticule.setMinAim(10)
@@ -82,7 +83,7 @@ class @Player
   setName: (name) ->
     @nametext = new Phaser.BitmapText(@shost.game, 0, 0, 'bitfont', name, 14)
     @nameoffX = -@nametext.width / 2
-    @nameoffY = -@sprite.width/@sprite.scale.y + 0.04 * @shost.game.height
+    @nameoffY = -@sprite.height - 0.02 * @shost.game.height
     @shost.playgroup.addChild(@nametext)
 
   # ============================================================================
@@ -95,21 +96,21 @@ class @Player
     @healthbarsprite = new Phaser.Sprite(@shost.game, 0, 0, 'healthbar')
     @healthbarsprite.angle = 0
     @healthbarsprite.scale.x = hscalex
-    @healthbarsprite.scale.y = 0.5
+    @healthbarsprite.scale.y = 1.0
     @healthbarsprite.anchor =
       x: 0.0
       y: 0.5
     @healthbarsprite.x = -@healthbarsprite.width/2
-    @healthbarsprite.y = 4
+    @healthbarsprite.y = 10
     @healthsprite = new Phaser.Sprite(@shost.game, 0, 0, 'health')
     @healthsprite.angle = 0
     @healthsprite.scale.x = hscalex
-    @healthsprite.scale.y = 0.5
+    @healthsprite.scale.y = 1.0
     @healthsprite.anchor =
       x: 0.0
       y: 0.5
     @healthsprite.x = -@healthsprite.width/2
-    @healthsprite.y = 4
+    @healthsprite.y = 10
     @sprite.addChild(@healthbarsprite)
     @sprite.addChild(@healthsprite)
 
@@ -209,7 +210,7 @@ class @Player
 
     # XXX affected by wind, etc
     fx = 0
-    fy = 9000 # bullet gravity
+    fy = GameConstants.gravity
     # since we've zeroed @cur_charge when calling fire(), 
     # use stored @last_charge instead
     vel = @last_charge
