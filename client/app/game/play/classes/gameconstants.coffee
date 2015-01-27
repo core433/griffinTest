@@ -12,7 +12,7 @@ class @GameConstants
   # The base health for which healthbar scale.x = 1
   @healthBase = 100
 
-  @playerScale = 0.5
+  @playerScale = 0.4
 
   # When walking, how big a jump in Y in world terrain is too high
   # before you can't walk.
@@ -36,6 +36,9 @@ class @GameConstants
 
   # travel distance before bullet can collide with self
   @bulletSelfHitDist = 20
+  @craterRadiusPx = 26
+
+  @gravity = 8000
 
   # ============================================================================
   # CAMERA
@@ -44,9 +47,8 @@ class @GameConstants
   # keep this 1 until one day in future Phaser fixes camera following while
   # scale is not 1
   @cameraScale = 1
-  # How many sections to split screen up to form deadzone with padding of
-  # 1/cameraDeadzoneTiles to the left and right
-  @cameraDeadzoneTiles = 3
+  # How many pixels is the height of the deadzone which centers camera on player
+  @cameraDeadzoneY = 100
   # For special Jolt camera effect, what's maximum jolt pixels
   @cameraJoltPx = 20
   # How fast the camera moves when player drags

@@ -100,15 +100,23 @@ class @World
     @offX = 0
     @offY = 0
 
+    # set this to true when actions that deform the map happen, such as 
+    # creating craters
+    @dirty = false
+
     @bmp = @shost.game.make.bitmapData(@width*@tileSize, @height*@tileSize)
     @sprite = new Phaser.Sprite(@shost.game, 0, 0, @bmp)
-    @sprite.inputEnabled = true
-    @sprite.events.onInputDown.add(() =>
-    console.log('sprite input Down'))
+    #@sprite.inputEnabled = true
+    @sprite.body = null
+    #@sprite.events.onInputDown.add(() =>
+    #console.log('sprite input Down'))
     @shost.playgroup.add(@sprite)
     @render(true)
 
     @createSurroundingSpace()
+
+    #@cropRect = new Phaser.Rectangle(0, 0, @shost.game.width, @shost.game.height)
+    #@sprite.crop(@cropRect)
 
   addSpawnPoint: (x, y) ->
     @spawnPoints.push([
@@ -160,8 +168,8 @@ class @World
     playHeightPx = @height * @tileSize
 
     horzPaddingPx = playWidthPx / 4
-    topPaddingPx = playHeightPx * 1.5
-    botPaddingPx = playHeightPx
+    topPaddingPx = playHeightPx * 0.3
+    botPaddingPx = playHeightPx * 0.3
 
     @shost.game.world.setBounds(
       0, 
@@ -205,20 +213,33 @@ class @World
           drawTileX = Phaser.Math.clamp(tileX + x, 0, @width-1)
           drawTileY = Phaser.Math.clamp(tileY + y, 0, @height-@tileSize-1)
           @futureData[drawTileX][drawTileY] = @emptyColor
+    @dirty = true
     null
 
   handleClick: (tileX, tileY) ->
     # do nothing for now
     null
 
+  #update: () ->
+    # XXX This doesn't actually improve performance, disabled...
+    #console.log @shost.game.camera.x
+    #console.log @shost.game.camera.y
+    #@cropRect.x = @shost.game.camera.x - @offX
+    #@cropRect.y = @shost.game.camera.y - @offY
+    #@sprite.updateCrop()
+
   render: (force=false) ->
+    if !force && !@dirty
+      return
     for x in [0..@width-1]
       for y in [0..@height-1]
         if @data[x][y] != @futureData[x][y] || force
           @data[x][y] = @futureData[x][y]
           @_drawTilePixel(@data[x][y], x, y)
           @bmp.dirty = true
+    @dirty = false
     true
+
 
   xTileForWorld: (world) ->
     Math.floor(world / @tileSize - @offX)

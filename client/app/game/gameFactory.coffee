@@ -1,7 +1,7 @@
 window.createGame = (scope, players, mapId, ele, injector) ->
   # height  = parseInt ele.css('height'), 10
   # width   = parseInt ele.css('width'), 10
-  game = new Phaser.Game(800, 600, Phaser.CANVAS, "gameCanvas")
+  game = new Phaser.Game(1024, 640, Phaser.CANVAS, "gameCanvas")
   # Cleanup
   scope.$on '$destroy', ->
     console.log "game destroyed."

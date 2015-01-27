@@ -51,6 +51,13 @@ class @GameInputs
       @spaceKeyDown, this);
     @shost.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onUp.add(
       @spaceKeyUp, this)
+    # weapon selection
+    @shost.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onDown.add(
+      @key1Down, this)
+    @shost.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onDown.add(
+      @key2Down, this)
+    @shost.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onDown.add(
+      @key3Down, this)
 
   @leftMouseDown: () ->
     if GameConstants.debug
@@ -104,4 +111,13 @@ class @GameInputs
     @spaceIsDown = false
     #console.log 'space key up'
     @shost.playerFire()
+
+  @key1Down: () ->
+    GameUI.refreshWeaponUI(0)
+
+  @key2Down: () ->
+    GameUI.refreshWeaponUI(1)
+
+  @key3Down: () ->
+    GameUI.refreshWeaponUI(2)
 

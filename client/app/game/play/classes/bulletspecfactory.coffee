@@ -1,5 +1,7 @@
 class @BulletSpecFactory
 
+  @craterRadiusPx = 26
+
   # This is the basic bullet spec for the simplest bullet.  Other specs 
   # override its values if specified, otherwise will default back to this.
   @basicSpec = {
@@ -12,7 +14,7 @@ class @BulletSpecFactory
     bullet_image: 'bullet',
     bullet_scale: 0.3,
     collisionRadiusPx: 16,
-    craterRadiusPx: 30,
+    craterRadiusPx: @craterRadiusPx,
     # Damage and explosion damage.  If a direct hit is achieved, the hit player
     # gets directHitDamage applied, but is ignored in the explosion damage.
     # All others hit by indirect explosionRadius will incur linearly decreasing
@@ -28,12 +30,12 @@ class @BulletSpecFactory
     # at the start of bullet's life, and at the end
     # can also attach emitters for smoke trail effect
     particleStart: (game, x, y) -> 
-      em = ExplosionFactory.createGlowBasic(game, x, y, 0.5, 0.3)
-      return em.concat(ExplosionFactory.createSparksBasic(game, x, y, 0.5))
+      em = ExplosionFactory.createGlowBasic(game, x, y, 0.3, 0.3)
+      return em.concat(ExplosionFactory.createSparksBasic(game, x, y, 0.3))
     particleAttach: null,
     particleEnd: (game, x, y, hitground=false) -> 
       if hitground
-        em = ExplosionFactory.createPebbleBasic(game, x, y, 0.6)
+        em = ExplosionFactory.createPebbleBasic(game, x, y, 0.5)
       else
         em = ExplosionFactory.createFlareBasic(game, x, y, 0.6)
       return em.concat(ExplosionFactory.createExplosionBasic(game, x, y, 0.6))
@@ -56,7 +58,7 @@ class @BulletSpecFactory
       bullet_image: 'bullet',
       bullet_scale: 0.3,
       collisionRadiusPx: 16,
-      craterRadiusPx: 30,
+      craterRadiusPx: @craterRadiusPx,
       directHitDamage: 33,      # max:    33
       explosionRadius: 60,
       explosionMaxDamage: 30,   # splash: 30 - 10
@@ -75,19 +77,19 @@ class @BulletSpecFactory
       bullet_image: 'missile1',
       bullet_scale: 0.3,
       collisionRadiusPx: 16,
-      craterRadiusPx: 28,
+      craterRadiusPx: 20,
       directHitDamage: 13,      # max: 52
       explosionRadius: 60,
       explosionMaxDamage: 8,   # splash: 32 - 24
       explosionMinDamage: 6,
       particleStart: (game, x, y) -> 
-        em = ExplosionFactory.createGlowBasic(game, x, y, 0.4, 0.1)
-        return em.concat(ExplosionFactory.createSparksBasic(game, x, y, 0.5))
+        em = ExplosionFactory.createGlowBasic(game, x, y, 0.2, 0.1)
+        return em.concat(ExplosionFactory.createSparksBasic(game, x, y, 0.3))
       particleAttach: (game, x, y) ->
-        return ExplosionFactory.createSmokeTrailBasic(game, x, y, 0.6)
+        return ExplosionFactory.createSmokeTrailBasic(game, x, y, 0.3, 1.8)
       particleEnd: (game, x, y, hitground=false) ->
         if hitground
-          em = ExplosionFactory.createPebbleBasic(game, x, y, 0.6)
+          em = ExplosionFactory.createPebbleBasic(game, x, y, 0.5)
         else
           em = ExplosionFactory.createFlareBasic(game, x, y, 0.6)
         return em.concat(ExplosionFactory.createExplosionBasic(game, x, y, 0.5))
@@ -96,7 +98,7 @@ class @BulletSpecFactory
     "2": {
       bullet_image: 'tbullet',
       bullet_scale: 0.4,
-      collisionRadiusPx: 16,
+      collisionRadiusPx: 10,
       craterRadiusPx: 0,
       directHitDamage: 0,
       explosionRadius: 0,
@@ -104,9 +106,9 @@ class @BulletSpecFactory
       explosionMinDamage: 0,
       particleStart: (game, x, y) -> 
         em = ExplosionFactory.createFlareBasic(game, x, y, 0.4)
-        return em.concat(ExplosionFactory.createSparksBasic(game, x, y, 0.6, 'spark_blue'))
+        return em.concat(ExplosionFactory.createSparksBasic(game, x, y, 0.4, 'spark_blue'))
       particleAttach: (game, x, y) ->
-        return ExplosionFactory.createSmokeTrailBasic(game, x, y, 1.0, 2.0, 'spark_blue', true)
+        return ExplosionFactory.createSmokeTrailBasic(game, x, y, 0.6, 4.0, 'spark_blue', true)
       particleEnd: (game, x, y, hitground=false) -> 
         if hitground
           em = ExplosionFactory.createPebbleBasic(game, x, y, 1)
