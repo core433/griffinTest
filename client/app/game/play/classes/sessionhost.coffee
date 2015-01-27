@@ -11,10 +11,9 @@ class @SessionHost
     # conserve bandwidth.
     @sessionid = null
     @players = []   # array of Player objects
-    @player_delays = {}  # dict of delays (value) where key is player id
     @bullets = []
     @active_player = null
-    @turn_time_remaining = 0
+    @game_time_remaining = 0
 
     # Add all sprites in play to this group so that the GameUI's group sits
     # on top of all of them
@@ -26,8 +25,6 @@ class @SessionHost
     # game camera
     @gcamera = null
 
-    @endingTurn = false
-    @endTurnTimer = 0
     @gameOver = false
 
   initialize: (player_configs) ->
@@ -81,10 +78,10 @@ class @SessionHost
       player.setName(name)
       @players.push player
 
-      # for each player add a delay wait entry
-      @player_delays[id] = 0
-
       num_players++
+
+    #GameUI.updateTurnText('Player ' + next_player_id + ' turn')
+    @game_time_remaining = GameConstants.turnTime
 
     # Disable player-to-player p2 body collisions.  For every pairing of 
     # players, disable collisions
@@ -101,7 +98,13 @@ class @SessionHost
 
     @gcamera = new GameCamera(this)
     @gcamera.initialize(1.0)
-    @endPlayerTurn()
+    @active_player = @players[0]
+    @active_player.active = true
+    @active_player.showUI()
+    @refreshUI()
+    @gcamera.follow(@active_player.sprite)
+    @gcamera.easeTo(@active_player.getX() - @game.width/2, @active_player.getY() - @game.height/2)
+
 
     GameUI.bringToTop()
 
@@ -125,28 +128,16 @@ class @SessionHost
 
     @gcamera.update(dt)
 
-    if @turn_time_remaining > 0
-      oldtime = Math.floor(@turn_time_remaining)
-      @turn_time_remaining -= dt
-      newtime = Math.ceil(@turn_time_remaining)
+    if @game_time_remaining > 0
+      oldtime = Math.floor(@game_time_remaining)
+      @game_time_remaining -= dt
+      newtime = Math.ceil(@game_time_remaining)
       if oldtime != newtime
         GameUI.updateTurnTime(newtime)
-      if @turn_time_remaining <= 0
+      if @game_time_remaining <= 0
         GameUI.updateTurnTime(0)
-        # If time ran out but there is a bullet still alive, let the bullet
-        # end the player's turn upon its death
-        #if @active_player != null
-        #  if !@active_player.hasAliveBullets()
-        #    @active_player.endTurn()
 
-    if @endingTurn
-      @endTurnTimer -= dt
-      # XXX In future, need to also check if all players and bullets have 
-      # stopped moving before ending turn
-      if @endTurnTimer <= 0
-        @endingTurn = false
-        @endTurnTimer = 0
-        @endPlayerTurn()
+    if @active_player == null
       return
 
     GameInputs.update(dt)
@@ -155,13 +146,6 @@ class @SessionHost
       @active_player.cur_move_points / @active_player.max_move_points)
     GameUI.updateShotBar(
       @active_player.cur_shot_points / @active_player.max_shot_points)
-
-  testExplosion: () ->
-    x = @game.input.activePointer.worldX
-    y = @game.input.activePointer.worldY
-    ExplosionFactory.createPebbleBasic(@game, x, y)
-    #ExplosionFactory.createExplosionBasic(@game, x, y)
-    null
 
   render: ->
     @world.render()
@@ -203,55 +187,7 @@ class @SessionHost
       return
     @active_player.setWeapon(num)
 
-  tryEndPlayerTurn: (died=false) ->
-    if @active_player == null
-      return
-
-    console.log 'ending player ' + @active_player.id
-
-    if died
-      @removePlayer(@active_player)
-    else
-      @player_delays[@active_player.id] += 100
-      @active_player.active = false
-
-    @active_player = null
-    # Kick off variable and timer to start end turn countdown
-    @endingTurn = true
-    @endTurnTimer = GameConstants.endTurnWaitTime
-
-  endPlayerTurn: ->
-    console.log "end player turn" 
-
-    next_player_id = -1
-    min_delay = 99999
-
-    for id, delay of @player_delays
-      if delay < min_delay
-        min_delay = delay
-        next_player_id = id
-
-    # Note to self:
-    # don't clear next_player_id's delay!  Should be cumulative thru turns
-
-    for player in @players
-      player.hideUI()   # hides aiming device, UI displays, etc
-      if player.id == next_player_id
-        @active_player = player
-        # XXX Will this reference the actual player, or a copy of it for the 
-        # loop?
-        @active_player.active = true
-        @active_player.showUI()
-        @active_player.initTurn()
-        @endTurnRefreshUI()
-
-    @gcamera.follow(@active_player.sprite)
-    @gcamera.easeTo(@active_player.getX() - @game.width/2, @active_player.getY() - @game.height/2)
-
-    GameUI.updateTurnText('Player ' + next_player_id + ' turn')
-    @turn_time_remaining = GameConstants.turnTime
-
-  endTurnRefreshUI: ->
+  refreshUI: ->
     GameUI.updateMoveBar(
       1.0 - @active_player.cur_movement / @active_player.max_movement)
     GameUI.updateChargeBar(0)
@@ -274,13 +210,6 @@ class @SessionHost
       @gameOverText = new Phaser.Text(@game, 200, 200, 'Game Over')
       @gcamera.addFixedSprite(@gameOverText)
       return
-
-    # then remove player entry in delay queue
-    new_delays = {}
-    for id, delay of @player_delays
-      if id != removePlayer.id
-        new_delays[id] = delay
-    @player_delays = new_delays
 
   removeBullet: (removeBullet) ->
     remaining_bullets = []

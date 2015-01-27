@@ -27,21 +27,6 @@ class @ExplosionFactory
     # explode, lifespan (ms), frequency, quantity, forceQuantity
     blastAEmitter.start(false, blastLifetimeMs, 60, numBlasts)
 
-    """
-    blastEmitter = game.add.emitter(x, y, numBlasts)
-    blastEmitter.blendMode = Phaser.blendModes.ADD
-    blastEmitter.makeParticles('explosion')
-    blastEmitter.gravity = -80*scale
-    blastEmitter.setXSpeed(-60*scale, 60*scale)
-    blastEmitter.setYSpeed(-20*scale, -40*scale)
-    blastEmitter.setAlpha(0.8, 0, blastLifetimeMs, Phaser.Easing.Linear.In)
-    blastEmitter.setScale(1.8*scale, 0.2*scale, 1.8*scale, 0.2*scale, 
-        blastLifetimeMs, Phaser.Easing.Linear.In)
-    # explode, lifespan (ms), frequency, quantity, forceQuantity
-    blastEmitter.start(false, blastLifetimeMs, 60, numBlasts)
-
-    return [blastAEmitter, blastEmitter]
-    """
     return [blastAEmitter]
 
   # Flying sparks exploding from a single point

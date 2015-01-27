@@ -9,33 +9,29 @@ class @Bullet
     @scale = 1
     @rot = 0
 
-    # World collision detection and crater creation
-    # These are in pixels, so for collisions against world need to convert
-    # to tiles by dividing by world.tileSize
-    @collisionRadiusPx = 20
-    @craterRadiusPx = 50
-    # Damage and explosion damage.  If a direct hit is achieved, the hit player
-    # gets directHitDamage applied, but is ignored in the explosion damage.
-    # All others hit by indirect explosionRadius will incur linearly decreasing
-    # explosionMaxDamage based on percentage distance from explosion center
-    @directHitDamage = 33
-    # note that explosion radius is based on center of bullet to center of
-    # player, so need to add at least player sprite width/2 to account for
-    # that extra distance
-    @explosionRadius = 70
-    @explosionMaxDamage = 30
-    @explosionMinDamage = 10
-    # how big the drawn explosion sprite is
-    @explosionGfxScale = 1
+    # Store the last position of the bullet so that when colliding at high 
+    # speeds with terrain, for example, can check the last non-colliding
+    # position of bullet to avoid getting stuck inside terrain.
+    @lastPos = [0,0]
 
+    # The bullet stats come from BulletSpecFactory, and are not populated
+    # in the constructor
+    @collisionRadiusPx = 0
+    @craterRadiusPx = 0
+    @directHitDamage = 0
+    @explosionRadius = 0
+    @explosionMaxDamage = 0
+    @explosionMinDamage = 0
+    @isTeleport = false
+
+    # Draw members for Phaser
+    @explosionGfxScale = 1
     @particleStart = null
     @particleAttach = null
     # need to manually kill attached emitters when die
     @attachedEmitters = []
     @particleEnd = null
-
-    @isTeleport = false
-    @teleportEnd = null
+    @teleportParticleEnd = null
 
     @entity = null
 
@@ -87,17 +83,17 @@ class @Bullet
     @particleEnd = spec.particleEnd
     # teleportation
     @isTeleport = spec.isTeleport
-    @teleportEnd = spec.teleportEnd
+    @teleportParticleEnd = spec.teleportEnd
     if @isTeleport
       @sprite.blendMode = Phaser.blendModes.ADD
 
   update: (world) ->
 
-    old_pos = [@entity.x, @entity.y]
+    @lastPos = [@entity.x, @entity.y]
     @entity.update()
     new_pos = [@entity.x, @entity.y]
-    tx = new_pos[0] - old_pos[0]
-    ty = new_pos[1] - old_pos[1]
+    tx = new_pos[0] - @lastPos[0]
+    ty = new_pos[1] - @lastPos[1]
     traveled = Math.sqrt(tx*tx + ty*ty)
     @distance_traveled += traveled
     if !@canHitFirer
@@ -140,8 +136,8 @@ class @Bullet
         doKillBullet = true
         explosionIgnorePlayer = player
         # also add a crater centered around bullet
-        tileX = GameMath.clamp(world.xTileForWorld(@entity.x), 0, world.width-1)
-        tileY = GameMath.clamp(world.yTileForWorld(@entity.y), 0, world.height-1)
+        tileX = GameMath.clamp(world.xTileForWorld(@lastPos[0]), 0, world.width-1)
+        tileY = GameMath.clamp(world.yTileForWorld(@lastPos[1]), 0, world.height-1)
         world.createCrater(tileX, tileY, @craterRadiusPx / world.tileSize)
         @shost.gcamera.jolt()
         break
@@ -152,9 +148,9 @@ class @Bullet
       # create a crater in world from the center of the bullet
       if GameConstants.debug
         console.log 'Hit Ground'
-      @drawExplosion(@entity.x, @entity.y, true)
-      tileX = GameMath.clamp(world.xTileForWorld(@entity.x), 0, world.width-1)
-      tileY = GameMath.clamp(world.yTileForWorld(@entity.y), 0, world.height-1)
+      @drawExplosion(@lastPos[0], @lastPos[1], true)
+      tileX = GameMath.clamp(world.xTileForWorld(@lastPos[0]), 0, world.width-1)
+      tileY = GameMath.clamp(world.yTileForWorld(@lastPos[1]), 0, world.height-1)
       world.createCrater(tileX, tileY, @craterRadiusPx / world.tileSize)
       doKillBullet = true
       spawnExplosion = true
@@ -190,7 +186,7 @@ class @Bullet
         doKillBullet = true
 
     if doTeleport
-      @teleportEnd(@player, @entity.x, @entity.y)
+      @teleportParticleEnd(@player, @lastPos[0], @lastPos[1])
       @shost.gcamera.center(@player.sprite)
 
     if doKillBullet
@@ -198,7 +194,6 @@ class @Bullet
         console.log 'bullet died'
       @shost.removeBullet(this)
       @kill()
-      #@player.tryBulletEndTurn()
 
   kill: () ->
     @sprite.destroy(true)

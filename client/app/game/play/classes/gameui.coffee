@@ -28,7 +28,7 @@ class @GameUI
   @sprites_wep = []
   # turn timer
   #@turn_text = null
-  @turn_time_text = null
+  @game_time_text = null
   
   # Creates and returns a sprite which will be added to the @ui_group
   # @img: name of image file to use for sprite
@@ -324,15 +324,15 @@ class @GameUI
     @ui_group.add(@turn_text)
     """
 
-    @turn_time_text = new Phaser.BitmapText(@shost.game,
+    @game_time_text = new Phaser.BitmapText(@shost.game,
       0,
       0,
       'rednum', '', 42)
-    @turn_time_text.fixedToCamera = true
-    @turn_time_text.cameraOffset.set(
+    @game_time_text.fixedToCamera = true
+    @game_time_text.cameraOffset.set(
       screenFractionW * 1.2 * screenW, 
       screenFractionW * 1.2 * screenH)
-    @ui_group.add(@turn_time_text)
+    @ui_group.add(@game_time_text)
 
   @bringToTop: () ->
     @shost.game.world.bringToTop(@ui_group)
@@ -368,12 +368,12 @@ class @GameUI
   @updateTurnTime: (tremaining) ->
     # if turn time is not below show time, hide the time display
     if tremaining > GameConstants.turnShowTime
-      @turn_time_text.visible = false
+      @game_time_text.visible = false
     # if turn time is in warn time, show time in red
     else if tremaining > 0
-      @turn_time_text.visible = true
-      @turn_time_text.setText(tremaining.toString())
+      @game_time_text.visible = true
+      @game_time_text.setText(tremaining.toString())
     # if turn time is negative or 0, hide it
     else
-      @turn_time_text.visible = false
+      @game_time_text.visible = false
 
