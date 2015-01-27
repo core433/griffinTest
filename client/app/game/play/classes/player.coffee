@@ -32,7 +32,7 @@ class @Player
     # firing and charging shot
     @wep_num = 0
     @reticule = null
-    @can_fire = false
+    @can_fire = true
 
     @max_shot_points = 200
     @cur_shot_points = 200
@@ -148,12 +148,7 @@ class @Player
     @healthbarsprite = null
     @healthsprite.destroy(true)
     @healthsprite = null
-    if @active
-      # if player is active player, endTurn will remove the player from game
-      @endTurn(true)
-    else
-      # otherwise manually remove player from game right now
-      @shost.removePlayer(this)
+    @shost.removePlayer(this)
 
   # ============================================================================
   #                             WEAPONS AND FIRING
@@ -341,39 +336,10 @@ class @Player
     @reticule.changeDirection(faceLeft)
     @reticule.update(@sprite.x, @sprite.y)
 
-  initTurn: ->
-    if !@active
-      return
-    console.log @getX()
-    console.log @getY()
-    @can_fire = true
-    @cur_charge = 0
-
   hasAliveBullets: () ->
     if @liveBulletsThisRound > 0
       return true
     return false
-    """
-    for bullet in @shost.bullets
-      if bullet.player == this
-        return true
-    return false
-    """
-
-  # When a bullet dies, it will try to end the player's turn.  If the bullet is
-  # the last bullet left belonging to the player, then it should end turn,
-  # otherwise it shouldn't
-  tryBulletEndTurn: () ->
-    @liveBulletsThisRound -= 1
-    if !@hasAliveBullets()
-      @endTurn()
-
-  endTurn: (died=false)->
-    if !@active
-      return
-    @active = false
-    @shost.tryEndPlayerTurn(died)
-    @can_fire = false
 
   moveLeft: (dt, world) ->
     @move(dt, world, true)

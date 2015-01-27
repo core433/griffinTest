@@ -20,7 +20,7 @@ class @PreloaderState extends Phaser.State
     @game.load.bitmapFont("rednum", @getAssetPath("rednumbers.png"), @getAssetPath("rednumbers.fnt"))
 
     @game.load.image("logo", @getAssetPath("phaser.png"))
-    @game.load.image("player", @getAssetPath("player.png"))
+    @game.load.image("player", @getAssetPath("player_dev.png"))
     @game.load.image("reticule", @getAssetPath("reticule.png"))
 
     # explosives and stuff
@@ -38,7 +38,7 @@ class @PreloaderState extends Phaser.State
 
     #@game.load.image("ground", @getAssetPath("ground.png"))
     #@game.load.image("world_bridge", @getAssetPath("world_bridge.png"))
-    @game.load.image("world_divide", @getAssetPath("world_divide.png"))
+    @game.load.image("world_divide", @getAssetPath("world_divide_lg.png"))
     @game.load.image("background", @getAssetPath("background.png"))
     @game.load.image("health", @getAssetPath("health.png"))
     @game.load.image("healthbar", @getAssetPath("healthbar.png"))
